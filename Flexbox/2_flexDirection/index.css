@@ -1,0 +1,14 @@
+.container {
+  border: 5px solid #ccc;
+  display: flex;
+  flex-direction: row; /*default*/
+  /* flex-direction: row-reverse; */
+  /* flex-direction: column; */
+  /* flex-direction: column-reverse; */
+}
+/*
+row: 默认值，主轴水平，起点左端
+row-reverse: 默认值，主轴水平，起点右端
+column: 主轴垂直，起点为上方
+column-reverse: 主轴垂直，起点为底部 
+*/

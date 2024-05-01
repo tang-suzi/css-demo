@@ -1,0 +1,25 @@
+.container {
+  border: 5px solid #ccc;
+  display: flex;
+}
+
+.home {
+  flex: 1 1 200px;
+  /* flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 200px; */
+}
+
+.login {
+  flex: 1 1 200px;
+  /* flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 200px; */
+}
+
+/* 
+flex: <flex-grow> <flex-shrink> <flex-basis>
+flex-grow: 指定元素的放大比例，默认值为0，如果存在剩余空间也不放大
+flex-shrink: 指定了 flex 元素的收缩规则。如果空间不足，该项目将缩小。flex 元素仅在默认宽度之和大于容器的时候才会发生收缩，其收缩的大小是依据 flex-shrink 的值。
+flex-basis: 指定元素在主轴方向上的初始大小
+*/

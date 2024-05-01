@@ -1,0 +1,10 @@
+.container {
+  border: 5px solid #ccc;
+  display: flex;
+}
+
+/*相当于 justifyContent: flex-end 其他同理*/
+/* .home { 
+  margin-left: auto; 
+} */
+

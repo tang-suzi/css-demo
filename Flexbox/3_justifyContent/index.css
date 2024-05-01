@@ -1,0 +1,10 @@
+.container {
+  border: 5px solid #ccc;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+/* flex-start 左对齐(默认值) flex-end 右对齐 */
+/* center 居中 */
+/* space-around: 每个元素的两侧间隔相等 space-between: 两端对齐 space-evenly: 将间距平分，包括起始位置和终止位置 */
+/* stretch: 行为同flex-start */

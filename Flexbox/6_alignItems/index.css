@@ -1,0 +1,29 @@
+.container {
+  border: 5px solid #ccc;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.home {
+  align-self: start;
+}
+
+.login {
+  align-self: flex-end;
+}
+
+/* 
+flex-start: 主轴起点或交叉轴起点对其
+flex-end: 主轴末端或交叉轴末端对其
+center: 外边距框在交叉轴上居中对齐。如果元素交叉轴尺寸大于flex容器，则将在两个方向上等距溢出
+start: 同flex-start
+end: 同flex-end
+self-start: 同flex-start
+self-end: 同flex-end
+baseline、first baseline、last baseline: 所有 flex 元素都对齐，以使它们的 flex 容器基线 对齐。距离其交叉轴起点和基线之间最远的元素与行的交叉轴起点对齐。
+stretch: 如果（多个）元素的组合大小小于容器的大小，其中自动调整大小的元素将等量增大，以填满容器，同时这些元素仍然保持其宽高比例的约束。
+safe: 与其它对齐值一起使用。如果所选对齐值导致元素溢出容器，则将元素按 start 方式对齐。
+unsafe: 与其它对齐值一起使用。不管元素和容器的相对尺寸以及是否会发生溢出，都会采用给定的对齐值。
+*/

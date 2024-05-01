@@ -1,0 +1,15 @@
+.container {
+  border: 5px solid #ccc;
+  display: flex;
+  /* 
+  指定flex元素是单行显示还是多行显示
+  nowrap: 摆放到一行(默认值)
+  wrap: 可以换行
+  wrap-reverse: cross-start 和 cross-end互换
+   */
+  flex-wrap: wrap;
+}
+
+.container > div {
+  width: 300px; /* 如果父容器宽度不够，则均分，如果宽度比子容器总宽度要大，则会有空白区域 */
+}

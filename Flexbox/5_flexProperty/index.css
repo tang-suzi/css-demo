@@ -1,0 +1,14 @@
+.container {
+  border: 5px solid #ccc;
+  display: flex;
+}
+
+.container > div {
+  flex: 1;
+
+  /* flex-grow, flex-shrink, flex-basis */
+}
+
+.container > .search {
+  flex: 2;
+}

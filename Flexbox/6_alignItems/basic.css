@@ -1,0 +1,34 @@
+.container > div {
+  padding: 10px;
+  text-align: center;
+  font-size: 2em;
+  color: #ffeead;
+}
+
+body {
+  margin: 0
+}
+
+html,
+body {
+  background-color: #ffeead;
+  height: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.container > div:nth-child(1) {
+  background-color: burlywood;
+}
+
+.container > div:nth-child(2) {
+  background-color: rosybrown;
+}
+
+.container > div:nth-child(3) {
+  background-color: burlywood;
+}
+
+.container > div:nth-child(4) {
+  background-color: rosybrown;
+}
