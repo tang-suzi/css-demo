@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@200;400;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div class="card">
+      <div class="card-thumbnail">
+        <img alt="" src="images/jr-korpa.jpeg" />
+      </div>
+      <div class="card-body">
+        <div class="card-avatar">
+          <img alt="" src="images/daniel-park.jpeg" />
+        </div>
+        <div class="card-details">
+          <h3>抽象渐变</h3>
+          <p>Tang Suzi</p>
+        </div>
+      </div>
+      <ul class="card-stats">
+        <li id="like">🤍 8</li>
+        <li>💬 32</li>
+      </ul>
+    </div>
+  </body>
+  <script>
+    const handleLikeBtn = document.querySelector("#like");
+    handleLikeBtn.onclick = function (e) {
+      //   console.dir(e.target);
+      const text = e.target.innerHTML;
+      e.target.innerHTML = text.replace(/\d+/g, text.match(/\d+/g) * 1 + 1);
+    };
+  </script>
+</html>
