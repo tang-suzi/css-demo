@@ -1,0 +1,13 @@
+.container {
+    border: 1px solid black;
+    height: 100%;
+    display: grid;
+    grid-gap: 5px;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(2, 100px);
+    /* start center end space-between space-evenly space-around */
+    justify-content: space-evenly;
+    /* start center end space-between space-evenly space-around */
+    align-content: space-evenly;
+}
+

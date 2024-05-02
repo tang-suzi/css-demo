@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <article>
+      <h1 id="running-any-npm-pacakge-in-the-browser-locally">
+        在本地浏览器中运行 NPM 包
+      </h1>
+
+      <p>
+        JavaScript 从未有过任何官方的软件包分发解决方案，每个 Web
+        平台（Rails、Django 等）都有自己的 JavaScript
+        结构和打包方法。在过去几年中，NPM 开始成为分发的规范方式，Webpack
+        是构建系统，但如果没有服务器端组件，就无法在浏览器中加载 NPM 软件包。
+      </p>
+
+      <p>
+        Scrimba 是一个交互式编码截屏平台，您可以在其中随时运行代码。能够使用 NPM
+        包是一个经常被要求的功能，但事实证明，它在技术上实现起来非常困难。在本文中，我将解释我们如何解决这个问题以及我们最终得到的解决方案。
+      </p>
+
+      <figure>
+        <img src="https://mave.me/img/projects/full_placeholder.png" />
+        <figcaption>图片来源：Wesley Buurke</figcaption>
+      </figure>
+      <p>
+        我们的解决方案（灵感来自
+        StackBlitz）几乎完全在客户端运行。依赖项解析是在服务器端完成的，但获取
+        NPM 文件、解析 <code>require()</code>,
+        解析所需路径和创建包均在客户端完成。这（与 IndexedDB
+        缓存相结合）可提供流畅的体验和极低的延迟。
+      </p>
+
+      <h2 id="what-is-involved-in-supporting-npm">支持 NPM 涉及哪些内容？</h2>
+
+      <p>支持 NPM 有两个非常不同的步骤：依赖解析和模块加载。</p>
+
+      <p><strong>依赖解析</strong> 是关于从依赖项 要求开始，</p>
+
+      <div class="language-json highlighter-coderay">
+        <div class="CodeRay">
+          <div class="code">
+            <pre><span class="line-numbers"><a href="#n1" name="n1">1</a></span><span style="color:#606"><span style="color:#404">&quot;</span><span>dependencies</span><span style="color:#404">&quot;</span></span>: {
+<span class="line-numbers"><a href="#n2" name="n2">2</a></span>  <span style="color:#606"><span style="color:#404">&quot;</span><span>react</span><span style="color:#404">&quot;</span></span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">^16.0.0</span><span style="color:#710">&quot;</span></span>,
+<span class="line-numbers"><a href="#n3" name="n3">3</a></span>  <span style="color:#606"><span style="color:#404">&quot;</span><span>react-rom</span><span style="color:#404">&quot;</span></span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">^16.0.0</span><span style="color:#710">&quot;</span></span>
+<span class="line-numbers"><a href="#n4" name="n4">4</a></span>}
+        </pre>
+          </div>
+        </div>
+      </div>
+
+      <p>关于需要安装哪些软件包的具体描述：</p>
+
+      <pre><code>
+node_modules/react       react@16.0.0
+node_modules/react-dom   react-dom@16.0.0
+node_modules/fbjs        fbjs@0.8.16
+...
+        </code></pre>
+
+      <p><strong>模块加载</strong>更加复杂，包括：</p>
+
+      <ul>
+        <li>
+          弄清楚 <code>require("react")</code> 在 app.js 中指的是
+          node_modules/react/index.js
+        </li>
+        <li>确保在执行模块主体之前依赖项可用</li>
+        <li>
+          提供 <code>exports</code>, <code>module</code>,
+          <code>process</code> 模块主体内的变量
+        </li>
+      </ul>
+
+      <h2 id="dependency-resolution">依赖解析</h2>
+
+      <p>
+        <a href="https://yarnpkg.com/">Yarn</a> 是 NPM 的包管理器，您
+        <em>可以</em> 使用它的库. 目前还没有可用的公共
+        API，但只要你依赖一个固定版本，一切都会顺利进行。 Yarn 有一个
+        <code>PackageResolver</code> 可以解析所有依赖项, 使用
+        <code>PackageHoister</code> 你可以找到需要安装包的路径. Yarn
+        很好地解耦了，尽管它缺少关于内部类的文档，但还是很容易弄清楚。
+      </p>
+
+      <h2 id="module-loader-webpack">模块加载器：Webpack</h2>
+
+      <p>
+        有一些在线编码沙箱 (<a href="https://www.webpackbin.com/">Webpackbin</a>
+        和 <a href="https://codesandbox.io/">CodeSandbox</a>) 通过服务端 Webpack
+        支持 NPM 包。它们的方法本质上如下：
+      </p>
+
+      <p>
+        首先，他们有一个 <em>打包器</em>，它会获取已完全解析的 包列表（例如
+        <code>react@16.0.0,react-dom@16.0.0</code>），生成一个
+        <code>package.json</code>，使用
+        <code>yarn</code> 安装包和依赖项，然后使用 Webpack 构建一个
+        <a href="https://webpack.js.org/plugins/dll-plugin/">DLL 包</a>。 DLL
+        包是一种将所有文件捆绑到单个 Webpack
+        包中的方法。打包可能需要一段时间（&gt;10
+        秒），但每个请求只需要一次，并且可以无限期地缓存生成的包。
+      </p>
+
+      <p>
+        当您想要执行 app.js 时，请将其发送到服务器，生成 一个 Webpack
+        配置（其中包括对 DLL 包的引用） 然后 Webpack 将为您解决所有问题。
+      </p>
+
+      <p>这种方法有两个大缺点：</p>
+
+      <ul>
+        <li>
+          构建初始包可能需要<em>很长时间</em>。这需要在服务器端完成，并且其可扩展性受您拥有的服务器数量限制。
+        </li>
+        <li>
+          软件包只能作为一个整体进行缓存。这意味着，如果您添加一个
+          小依赖项，您仍然必须创建一个全新的软件包。
+        </li>
+      </ul>
+
+      <p>
+        我们与 Christian Alfoni（Webpackbin
+        的创建者）一起创建了一个原型，但当我们发现一种不同的方法时，还有一些未完成的工作。
+      </p>
+
+      <div class="aside">Yarn 1.3 最近发布，包含许多新功能！</div>
+
+      <p>hello</p>
+
+      <h2 id="module-loader-unpkg--systemjs">模块加载器: Unpkg + SystemJS</h2>
+
+      <p>
+        <a href="https://stackblitz.com/">StackBlitz</a>
+        是一个在线编码沙箱，它完全无需使用 Webpack 即可支持 NPM。他们在
+        unpkg-repo 的一条评论中简要描述了他们的方法：<a
+          href="https://github.com/unpkg/unpkg-website/issues/35#issuecomment-317128917"
+          >unpkg-repo</a
+        >
+      </p>
+
+      <blockquote>
+        <p>
+          简而言之，SystemJS &amp; Unpkg
+          是开发用户体验的绝佳组合，因为它们体现了本地开发环境的优秀之处：客户端负责下载、安装、捆绑，甚至为应用程序提供服务。
+        </p>
+      </blockquote>
+
+      <p>
+        他们还没有开源他们的解决方案，但从他们的描述中我们仍然可以了解它的工作原理。假设我们有一个
+        app.js，其中包含以下内容：
+      </p>
+
+      <div class="language-javascript highlighter-coderay">
+        <div class="CodeRay">
+          <div class="code">
+            <pre><span class="line-numbers"><a href="#n1" name="n1">1</a></span><span style="color:#080;font-weight:bold">import</span> React from <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">react</span><span style="color:#710">'</span></span>;
+<span class="line-numbers"><a href="#n2" name="n2">2</a></span><span style="color:#080;font-weight:bold">import</span> ReactDOM from <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">react-dom</span><span style="color:#710">'</span></span>;
+        </pre>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        这可以定义为 SystemJS
+        中的一个模块，它将开始发挥它的魔力。所需的路径（<code>react</code> 和
+        <code>react-dom</code>）将被提取并尝试解析。通过 编写 SystemJS
+        插件，我们可以与 <a href="https://unpkg.com/">Unpkg</a> 集成并直接从 NPM
+        包中获取文件：
+      </p>
+
+      <ul>
+        <li>
+          首先，我们可以加载
+          <a href="https://unpkg.com/react@16.0.0/package.json"
+            >https://unpkg.com/react@16.0.0/package.json</a
+          >
+          来查找主文件。在本例中，它是 <code>index.js</code>。
+        </li>
+        <li>
+          然后我们可以直接获取
+          <a href="https://unpkg.com/react@16.0.0/index.js"
+            >https://unpkg.com/react@16.0.0/index.js</a
+          >
+          并将其注册为 SystemJS 模块。
+        </li>
+        <li>
+          SystemJS 将从此文件中提取所需的路径，并 递归地获取/注册所有依赖文件。
+        </li>
+        <li>一旦一切完成，我们就可以执行我们原始的app.js。</li>
+      </ul>
+
+      <p>
+        根据 StackBlitz 的描述，我们在 Scrimba 中实现了一个原型，并且
+        我们有以下经验：
+      </p>
+
+      <ul>
+        <li>
+          事实证明，SystemJS 的内置解析逻辑与 Node
+          的并不完全匹配，而且有相当多的包依赖于 Node
+          的行为。我们最终编写了自定义路径解析器。
+        </li>
+        <li>
+          SystemJS 很慢。尽管我们缓存了文件内容，并且 根本没有执行任何 HTTP
+          请求，但仅解析所有 依赖项就需要大约 150 毫秒。这似乎是由于大量使用
+          Promises 造成的， 当没有异步性时，Promises 会导致开销。
+        </li>
+      </ul>
+
+      <p>
+        最后，我们觉得需要重新发明 SystemJS 的许多部分 才能获得正确的行为，而
+        SystemJS 剩下的部分 很慢或未被使用。
+      </p>
+
+      <h2 id="module-loader-custom-loader-our-approach">
+        模块加载器：Custom loader
+      </h2>
+
+      <p>
+        我们的最终解决方案使用了我们为用例编写的模块加载器。它由几个解耦的部分组成，这些部分组合成一个完整的解决方案。该项目名为“mrmanager”，目前尚未开源，但如果有兴趣，我们可以实现它。
+      </p>
+
+      <p>
+        首先有一个虚拟<strong>文件系统</strong>。文件系统 处理所需的路径解析并与
+        Unpkg 集成以获取 NPM 文件。
+      </p>
+
+      <div class="language-javascript highlighter-coderay">
+        <div class="CodeRay">
+          <div class="code">
+            <pre><span class="line-numbers"> <a href="#n1" name="n1">1</a></span><span style="color:#080;font-weight:bold">var</span> fs = <span style="color:#080;font-weight:bold">new</span> FileSystem;
+<span class="line-numbers"> <a href="#n2" name="n2">2</a></span>
+<span class="line-numbers"> <a href="#n3" name="n3">3</a></span><span style="color:#777">// Set up file system:</span>
+<span class="line-numbers"> <a href="#n4" name="n4">4</a></span><span style="color:#080;font-weight:bold">var</span> npm = <span style="color:#080;font-weight:bold">new</span> PackageSet;
+<span class="line-numbers"> <a href="#n5" name="n5">5</a></span>fs.mount(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">/node_modules/react/</span><span style="color:#710">&quot;</span></span>, npm.get(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">react@16.0.0</span><span style="color:#710">&quot;</span></span>);
+<span class="line-numbers"> <a href="#n6" name="n6">6</a></span>fs.mount(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">/node_modules/react-dom/</span><span style="color:#710">&quot;</span></span>, npm.get(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">react-dom@16.0.0</span><span style="color:#710">&quot;</span></span>);
+<span class="line-numbers"> <a href="#n7" name="n7">7</a></span>
+<span class="line-numbers"> <a href="#n8" name="n8">8</a></span><span style="color:#080;font-weight:bold">var</span> <span style="color:#080;font-weight:bold">static</span> = <span style="color:#080;font-weight:bold">new</span> StaticMount({<span style="color:#606"><span style="color:#404">&quot;</span><span>app.js</span><span style="color:#404">&quot;</span></span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">require('react')</span><span style="color:#710">&quot;</span></span>});
+<span class="line-numbers"> <a href="#n9" name="n9">9</a></span>fs.mount(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">/</span><span style="color:#710">&quot;</span></span>, <span style="color:#080;font-weight:bold">static</span>);
+<span class="line-numbers"><strong><a href="#n10" name="n10">10</a></strong></span>
+<span class="line-numbers"><a href="#n11" name="n11">11</a></span><span style="color:#777">// Resolve paths relative to a directory:</span>
+<span class="line-numbers"><a href="#n12" name="n12">12</a></span><span style="color:#080;font-weight:bold">var</span> path = await fs.resolve(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">react</span><span style="color:#710">&quot;</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">/</span><span style="color:#710">&quot;</span></span>)
+<span class="line-numbers"><a href="#n13" name="n13">13</a></span>
+<span class="line-numbers"><a href="#n14" name="n14">14</a></span><span style="color:#777">// result: /node_modules/react/index.js</span>
+<span class="line-numbers"><a href="#n15" name="n15">15</a></span>
+<span class="line-numbers"><a href="#n16" name="n16">16</a></span><span style="color:#777">// Fetch the body</span>
+<span class="line-numbers"><a href="#n17" name="n17">17</a></span><span style="color:#080;font-weight:bold">var</span> body = await fs.fetch(path);
+        </pre>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        然后我们有<strong>模块系统</strong>。这提供了一种注册模块和执行模块的方法：
+      </p>
+
+      <div class="language-javascript highlighter-coderay">
+        <div class="CodeRay">
+          <div class="code">
+            <pre><span class="line-numbers"> <a href="#n1" name="n1">1</a></span><span style="color:#080;font-weight:bold">var</span> system = <span style="color:#080;font-weight:bold">new</span> ModuleSystem;
+<span class="line-numbers"> <a href="#n2" name="n2">2</a></span>
+<span class="line-numbers"> <a href="#n3" name="n3">3</a></span><span style="color:#777">// Define module</span>
+<span class="line-numbers"> <a href="#n4" name="n4">4</a></span>system.define(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">/app.js</span><span style="color:#710">&quot;</span></span>, <span style="color:#080;font-weight:bold">function</span>(require, module, exports) {
+<span class="line-numbers"> <a href="#n5" name="n5">5</a></span>  <span style="color:#080;font-weight:bold">var</span> React = require(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">react</span><span style="color:#710">&quot;</span></span>);
+<span class="line-numbers"> <a href="#n6" name="n6">6</a></span>});
+<span class="line-numbers"> <a href="#n7" name="n7">7</a></span>
+<span class="line-numbers"> <a href="#n8" name="n8">8</a></span><span style="color:#777">// Register mappings</span>
+<span class="line-numbers"> <a href="#n9" name="n9">9</a></span>system.registerResolve(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">react</span><span style="color:#710">&quot;</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">/</span><span style="color:#710">&quot;</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">/node_modules/react/index.js</span><span style="color:#710">&quot;</span></span>);
+<span class="line-numbers"><strong><a href="#n10" name="n10">10</a></strong></span>
+<span class="line-numbers"><a href="#n11" name="n11">11</a></span><span style="color:#777">// Execute module</span>
+<span class="line-numbers"><a href="#n12" name="n12">12</a></span><span style="color:#080;font-weight:bold">var</span> result = system.moduleResult(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">/app.js</span><span style="color:#710">&quot;</span></span>)
+        </pre>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        请注意，模块系统
+        <em>不会</em>
+        解析所需路径或获取依赖项，因此您必须在不同级别处理此问题。在尝试执行所有模块之前，您有责任定义它们。这是一种将模块系统简化为其最基本功能并允许使用不同方法来处理依赖项的方法。
+      </p>
+
+      <p>
+        拼图的最后一块是<strong>loader</strong>。加载器将模块系统与文件系统结合起来，这样：
+      </p>
+
+      <ul>
+        <li>加载程序将使用文件系统来获取代码</li>
+        <li>
+          它将解析代码中的依赖项，获取依赖项，
+          解析所有路径并确保所有内容可用。这是以 递归方式完成的。
+        </li>
+        <li>
+          代码将被包装在
+          <code>system.define(name, function() { … }</code>块内
+        </li>
+        <li><em>所有</em> 文件的包装代码被连接在一起形成一个大字符串</li>
+        <li>
+          一旦所有依赖项都加载完毕，它将执行一次代码。这会将每个文件注册到模块系统，现在我们就可以调用主文件了。
+        </li>
+      </ul>
+
+      <p>
+        这里的关键部分（与 SystemJS 相比）是我们将
+        所有已处理的文件组合成一个大字符串，并且 (1) 一次执行它，以及 (2)
+        将它们全部缓存在一起。在 SystemJS 中，您可以缓存的唯一单元是
+        <em>file</em> 并且 SystemJS 每次都会重新解析所需路径，
+        解析这些路径等等。
+      </p>
+
+      <p>
+        这是一个很好的例子，说明如何将两个系统（模块系统和依赖系统）分离，从而为我们带来更大的灵活性，尽管我们总是一起使用它们。通过将它们分离，我们清楚地定义了模块系统需要什么才能发挥作用。经过仔细考虑，我们找到了一种以最高效的方式缓存它的方法。
+      </p>
+
+      <p>
+        最终结果如何？通过热缓存，mrmanager 能够在 9 毫秒内执行 React（使用
+        ReactDOM），而不是 SystemJS 的 150
+        毫秒。当您想要快速迭代小型项目时，这些毫秒至关重要。
+      </p>
+
+      <p>
+        我必须再次澄清，不仅仅是性能问题促使我们采用 自定义方法。在我们的
+        SystemJS 原型中，我们最终只使用了 SystemJS
+        的一小部分，重新​​设计了其中的部分，并对各种功能进行了修补。这并不是对
+        SystemJS 本身的批评，而是表明它不是为我们的用例而设计的。
+      </p>
+    </article>
+  </body>
+</html>
