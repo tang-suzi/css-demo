@@ -1,0 +1,44 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-word: #5134ff;
+}
+
+.container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container > h1:after {
+  margin-left: 10px;
+  padding: 10px;
+  content: "";
+  animation: 6s swap infinite;
+  background-color: var(--bg-word);
+  border-radius: 4px;
+  color: #fff;
+}
+
+@keyframes swap {
+  0% {
+    content: "singing";
+  }
+  25% {
+    content: "cat";
+  }
+  50% {
+    content: "dog";
+  }
+  75% {
+    content: "coding";
+  }
+  100% {
+    content: "singing";
+  }
+}
