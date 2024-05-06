@@ -1,0 +1,50 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --card-height: 200px;
+}
+
+.container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card {
+  border: 1px solid #000;
+  height: var(--card-height);
+  width: calc(var(--card-height) * 2 / 3);
+  border-radius: 4px;
+  display: grid;
+  grid-template-columns: 10% 80% 10%;
+  color: red;
+  padding: 0.25em;
+  font-size: 1.25em;
+}
+
+.middle {
+  display: grid;
+  grid-template: repeat(2, 1fr) / repeat(2, 50%);
+  align-items: center;
+  text-align: center;
+  font-size: 2em;
+}
+
+.middle :nth-child(3),
+.middle :nth-child(4) {
+  transform: scaleY(-1);
+}
+
+.right {
+  transform: rotate(180deg);
+}
+
+.left > div:first-child,
+.right > div:first-child {
+  padding-left: 4px;
+}
